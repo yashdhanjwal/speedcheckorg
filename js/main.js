@@ -52,7 +52,7 @@ class Speedometer {
         const height = rect.height;
         const centerX = width / 2;
         const centerY = height / 2;
-        const radius = Math.min(centerX, centerY) - 15;
+        const radius = Math.max(0, Math.min(centerX, centerY) - 15);
 
         this.ctx.clearRect(0, 0, width, height);
 
@@ -177,46 +177,55 @@ async function startTest() {
 
     speedTest = new InternetSpeedTest();
 
-    statusText.innerText = "Detecting connection details...";
-    const isHttps = window.location.protocol === 'https:';
-    document.getElementById('security-val').innerText = isHttps ? "Protected (SSL)" : "Unprotected";
-    document.getElementById('security-val').style.color = isHttps ? "green" : "red";
+    try {
+        statusText.innerText = "Detecting connection details...";
+        const isHttps = window.location.protocol === 'https:';
+        document.getElementById('security-val').innerText = isHttps ? "Protected (SSL)" : "Unprotected";
+        document.getElementById('security-val').style.color = isHttps ? "green" : "red";
 
-    await speedTest.getMetadata();
-    document.getElementById('ip-val').innerText = speedTest.results.ip;
-    document.getElementById('isp-val').innerText = speedTest.results.isp;
+        await speedTest.getMetadata();
+        document.getElementById('ip-val').innerText = speedTest.results.ip;
+        document.getElementById('isp-val').innerText = speedTest.results.isp;
+        document.getElementById('loc-val').innerText = speedTest.results.location;
 
-    statusText.innerText = "Testing Latency (Ping)...";
-    progressFill.style.width = '5%';
-    const ping = await speedTest.runPing();
-    document.getElementById('ping-val').innerText = ping;
+        statusText.innerText = "Testing Latency (Ping)...";
+        progressFill.style.width = '5%';
+        const ping = await speedTest.runPing();
+        document.getElementById('ping-val').innerText = ping;
 
-    statusText.innerText = "Testing Download Speed...";
-    await speedTest.runDownload((speed, progress) => {
-        speedometer.setSpeed(speed);
-        updateChart(downloadChart, speed);
-        progressFill.style.width = (5 + progress * 0.45) + '%';
-    });
-    document.getElementById('download-val').innerText = speedTest.results.download.toFixed(1);
-    document.getElementById('stability-val').innerText = speedTest.results.stability;
+        statusText.innerText = "Testing Download Speed...";
+        await speedTest.runDownload((speed, progress) => {
+            speedometer.setSpeed(speed);
+            updateChart(downloadChart, speed);
+            progressFill.style.width = (5 + progress * 0.45) + '%';
+        });
+        document.getElementById('download-val').innerText = speedTest.results.download.toFixed(1);
+        document.getElementById('stability-val').innerText = speedTest.results.stability;
 
-    statusText.innerText = "Testing Upload Speed...";
-    speedometer.setSpeed(0);
-    await speedTest.runUpload((speed, progress) => {
-        speedometer.setSpeed(speed);
-        updateChart(uploadChart, speed);
-        progressFill.style.width = (50 + progress * 0.45) + '%';
-    });
-    document.getElementById('upload-val').innerText = speedTest.results.upload.toFixed(1);
+        statusText.innerText = "Testing Upload Speed...";
+        speedometer.setSpeed(0);
+        await speedTest.runUpload((speed, progress) => {
+            speedometer.setSpeed(speed);
+            updateChart(uploadChart, speed);
+            progressFill.style.width = (50 + progress * 0.45) + '%';
+        });
+        document.getElementById('upload-val').innerText = speedTest.results.upload.toFixed(1);
 
-    document.getElementById('data-val').innerText = speedTest.results.dataTransferred.toFixed(1);
-    progressFill.style.width = '100%';
-    statusText.innerText = "Test Complete!";
+        document.getElementById('data-val').innerText = speedTest.results.dataTransferred.toFixed(1);
+        progressFill.style.width = '100%';
+        statusText.innerText = "Test Complete!";
 
-    setTimeout(() => {
-        testView.style.display = 'none';
-        resultsView.style.display = 'block';
-    }, 1000);
+        setTimeout(() => {
+            testView.style.display = 'none';
+            resultsView.style.display = 'block';
+            if (downloadChart) downloadChart.update();
+            if (uploadChart) uploadChart.update();
+        }, 1000);
+    } catch (e) {
+        console.error("Test failed:", e);
+        statusText.innerText = "Test failed. Please try again.";
+        startBtn.style.display = 'block';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -18,21 +18,58 @@ class InternetSpeedTest {
         };
     }
 
-    async getMetadata() {
+    async fetchWithTimeout(url, options = {}, timeout = 5000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
         try {
-            // Using ipapi.co for detailed info including ISP (org)
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            this.results.ip = data.ip;
-            this.results.isp = data.org || "Unknown ISP";
-            this.results.location = `${data.city}, ${data.region}, ${data.country_name}`;
-            return data;
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            return response;
         } catch (e) {
-            console.error("Metadata fetch failed", e);
-            this.results.ip = "Unknown";
-            this.results.isp = "Unknown";
-            return null;
+            clearTimeout(id);
+            throw e;
         }
+    }
+
+    async getMetadata() {
+        const apis = [
+            {
+                url: 'https://ipapi.co/json/',
+                map: (data) => ({
+                    ip: data.ip,
+                    isp: data.org || "Unknown ISP",
+                    location: `${data.city}, ${data.region}, ${data.country_name}`
+                })
+            },
+            {
+                url: 'https://freeipapi.com/api/json',
+                map: (data) => ({
+                    ip: data.ipAddress,
+                    isp: "Detected via IP",
+                    location: `${data.cityName}, ${data.regionName}, ${data.countryName}`
+                })
+            }
+        ];
+
+        for (const api of apis) {
+            try {
+                const response = await this.fetchWithTimeout(api.url);
+                const data = await response.json();
+                const mapped = api.map(data);
+                this.results.ip = mapped.ip;
+                this.results.isp = mapped.isp;
+                this.results.location = mapped.location;
+                return data;
+            } catch (e) {
+                console.error(`Metadata fetch failed for ${api.url}:`, e);
+            }
+        }
+
+        // Fallback
+        this.results.ip = "Unknown";
+        this.results.isp = "Unknown";
+        this.results.location = "Unknown";
+        return null;
     }
 
     async getPreciseLocation() {
@@ -59,7 +96,7 @@ class InternetSpeedTest {
         for (let i = 0; i < this.pingSamples; i++) {
             const start = performance.now();
             try {
-                await fetch(this.endpoint + '?t=' + Date.now(), { cache: 'no-store' });
+                await this.fetchWithTimeout(this.endpoint + '?t=' + Date.now(), { cache: 'no-store' }, 2000);
                 const end = performance.now();
                 total += (end - start);
             } catch (e) {
@@ -93,7 +130,8 @@ class InternetSpeedTest {
                 const finalLoaded = lastLoaded;
                 this.results.download = (finalLoaded * 8) / totalDuration / 1000000;
                 this.results.dataTransferred += finalLoaded / (1024 * 1024);
-                this.results.stability = this.calculateStability(speeds);
+                // Discard first 5 samples for stability
+                this.results.stability = this.calculateStability(speeds.slice(5));
                 resolve(this.results.download);
             };
 
@@ -106,8 +144,6 @@ class InternetSpeedTest {
 
                 if (durationSinceLast > 0.05) {
                     const loaded = e.loaded;
-                    const total = e.total || this.downloadSize;
-
                     const instantSpeed = ((loaded - lastLoaded) * 8) / durationSinceLast / 1000000;
                     if (isFinite(instantSpeed) && instantSpeed > 0) {
                         speeds.push(instantSpeed);
@@ -131,7 +167,7 @@ class InternetSpeedTest {
                 if (!isFinished) {
                     isFinished = true;
                     clearTimeout(timeout);
-                    reject(new Error("XHR Error"));
+                    finalize(); // Resolve with what we have instead of rejecting
                 }
             };
             xhr.send();
@@ -200,7 +236,7 @@ class InternetSpeedTest {
                 if (!isFinished) {
                     isFinished = true;
                     clearTimeout(timeout);
-                    reject(new Error("XHR Error"));
+                    finalize();
                 }
             };
             xhr.send(blob);
