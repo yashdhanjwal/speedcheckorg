@@ -30,21 +30,65 @@
                 <div class="ad-placeholder">Advertisement</div>
             </aside>
 
-            <section class="test-container">
-                <h1>Internet Speed Test</h1>
-                <div id="speedometer-wrapper">
-                    <canvas id="speedometerCanvas"></canvas>
-                    <div class="speed-value">
-                        <span id="current-speed">0.0</span>
-                        <span class="unit">Mbps</span>
+            <section class="test-area" id="main-test-area">
+                <div id="test-view">
+                    <h1>Internet Speed Test</h1>
+                    <div id="speedometer-wrapper">
+                        <canvas id="speedometerCanvas"></canvas>
+                        <div class="speed-value">
+                            <span id="current-speed">0.0</span>
+                            <span class="unit">Mbps</span>
+                        </div>
+                        <button id="start-btn">GO</button>
                     </div>
-                    <button id="start-btn">GO</button>
+
+                    <div id="status-text">Ready to test your speed</div>
+
+                    <div class="test-progress-bar">
+                        <div id="progress-fill"></div>
+                    </div>
                 </div>
 
-                <div id="status-text">Ready to test your speed</div>
+                <div id="results-view" style="display: none;">
+                    <h2>Test Results</h2>
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <span class="label">Ping</span>
+                            <span class="value" id="ping-val">--</span><span class="unit">ms</span>
+                        </div>
+                        <div class="result-card">
+                            <span class="label">Download</span>
+                            <span class="value" id="download-val">--</span><span class="unit">Mbps</span>
+                        </div>
+                        <div class="result-card">
+                            <span class="label">Upload</span>
+                            <span class="value" id="upload-val">--</span><span class="unit">Mbps</span>
+                        </div>
+                        <div class="result-card">
+                            <span class="label">Stability</span>
+                            <span class="value" id="stability-val">--</span><span class="unit">%</span>
+                        </div>
+                    </div>
 
-                <div class="test-progress-bar">
-                    <div id="progress-fill"></div>
+                    <div class="metadata-grid">
+                        <div class="meta-item"><strong>IP:</strong> <span id="ip-val">--</span></div>
+                        <div class="meta-item"><strong>ISP:</strong> <span id="isp-val">--</span></div>
+                        <div class="meta-item"><strong>Security:</strong> <span id="security-val">--</span></div>
+                        <div class="meta-item"><strong>Data:</strong> <span id="data-val">--</span> MB</div>
+                    </div>
+
+                    <div class="graphs-container">
+                        <div class="graph-box">
+                            <canvas id="downloadGraph"></canvas>
+                        </div>
+                        <div class="graph-box">
+                            <canvas id="uploadGraph"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="test-again-btn">Test Again</button>
+                    </div>
                 </div>
             </section>
 
@@ -53,87 +97,20 @@
             </aside>
         </div>
 
-        <section class="results-panel" id="results-panel" style="display: none;">
-            <div class="results-grid">
-                <div class="result-card">
-                    <span class="label">Latency / Ping</span>
-                    <span class="value" id="ping-val">--</span>
-                    <span class="unit">ms</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">Download</span>
-                    <span class="value" id="download-val">--</span>
-                    <span class="unit">Mbps</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">Upload</span>
-                    <span class="value" id="upload-val">--</span>
-                    <span class="unit">Mbps</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">Stability</span>
-                    <span class="value" id="stability-val">--</span>
-                    <span class="unit">%</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">Data Transferred</span>
-                    <span class="value" id="data-val">--</span>
-                    <span class="unit">MB</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">IP Address</span>
-                    <span class="value" id="ip-val">--</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">ISP</span>
-                    <span class="value" id="isp-val">--</span>
-                </div>
-                <div class="result-card">
-                    <span class="label">Security</span>
-                    <span class="value" id="security-val">Protected</span>
-                </div>
-            </div>
-
-            <div class="graphs-container">
-                <div class="graph-box">
-                    <h3>Download Stability</h3>
-                    <canvas id="downloadGraph"></canvas>
-                </div>
-                <div class="graph-box">
-                    <h3>Upload Stability</h3>
-                    <canvas id="uploadGraph"></canvas>
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button id="test-again-btn">Test Again</button>
-            </div>
-        </section>
-
         <section class="info-section">
             <h2>Why Use This Speed Test?</h2>
-            <p>This tool measures your connection speed and quality to the internet. It analyzes ping (latency), download speed, and upload speed.</p>
-            <p>Running a regular speed test helps you ensure that your ISP is providing the bandwidth you're paying for. It also helps in troubleshooting network issues and optimizing your Wi-Fi setup.</p>
+            <p>This tool measures your connection speed and quality. It analyzes ping (latency), download speed, and upload speed.</p>
         </section>
     </main>
 
     <footer>
         <div class="container footer-content">
             <div class="owner-info">
-                <h3>About the Developer</h3>
-                <p><strong>Name:</strong> Yash Dhanjwal</p>
-                <p><strong>Education:</strong> Pursuing B.Tech</p>
-                <p><strong>Location:</strong> New Delhi, Capital of India</p>
-                <p><strong>Website:</strong> <a href="https://www.yashdhanjwal.com" target="_blank">yashdhanjwal.com</a></p>
-            </div>
-            <div class="contact-info">
-                <h3>Contact</h3>
-                <p><strong>Mobile:</strong> +91 87663 56943</p>
-                <p><strong>WhatsApp:</strong> +91 99900 33043</p>
+                <p><strong>Developer:</strong> Yash Dhanjwal | Pursuing B.Tech | New Delhi</p>
+                <p><strong>Website:</strong> <a href="https://www.yashdhanjwal.com" target="_blank">yashdhanjwal.com</a> | <strong>WhatsApp:</strong> +91 99900 33043</p>
             </div>
             <div class="privacy-disclaimer">
-                <p>© 2025 Free Online Tools by Yash Dhanjwal. No personal data is permanently stored. <br>
-                Subdomain: <a href="https://freetools27.yashdhanjwal.com">freetools27.yashdhanjwal.com</a></p>
+                <p>© 2025 Free Online Tools by Yash Dhanjwal. Subdomain: <a href="https://freetools27.yashdhanjwal.com">freetools27.yashdhanjwal.com</a></p>
             </div>
         </div>
     </footer>

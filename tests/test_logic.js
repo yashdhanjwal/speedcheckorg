@@ -5,10 +5,11 @@ global.performance = { now: () => Date.now() };
 global.fetch = async (url) => {
     return {
         json: async () => ({
-            ipAddress: '127.0.0.1',
-            cityName: 'New Delhi',
-            regionName: 'Delhi',
-            countryName: 'India'
+            ip: '127.0.0.1',
+            org: 'Mock ISP',
+            city: 'New Delhi',
+            region: 'Delhi',
+            country_name: 'India'
         })
     };
 };
@@ -21,26 +22,26 @@ class MockXHR {
         this.upload = { onprogress: null };
         this.method = '';
         this.url = '';
+        this._aborted = false;
     }
     open(method, url) { this.method = method; this.url = url; }
+    abort() { this._aborted = true; }
     send(data) {
+        // Simulate progress and then either load or timeout
         setTimeout(() => {
+            if (this._aborted) return;
             if (this.method === 'GET') {
-                if (this.onprogress) this.onprogress({ loaded: 7 * 1024 * 1024, total: 15 * 1024 * 1024 });
-                setTimeout(() => {
-                    if (this.onload) {
-                        this.onload();
-                    }
-                }, 100);
+                if (this.onprogress) this.onprogress({ loaded: 5 * 1024 * 1024, total: 100 * 1024 * 1024 });
             } else {
-                if (this.upload.onprogress) this.upload.onprogress({ loaded: 2 * 1024 * 1024, total: 5 * 1024 * 1024 });
-                setTimeout(() => {
-                    if (this.onload) {
-                        this.onload();
-                    }
-                }, 100);
+                if (this.upload.onprogress) this.upload.onprogress({ loaded: 2 * 1024 * 1024, total: 20 * 1024 * 1024 });
             }
-        }, 100);
+        }, 50);
+
+        // We'll let it "finish" fast for the test, or mock the timeout
+        setTimeout(() => {
+            if (this._aborted) return;
+            if (this.onload) this.onload();
+        }, 200);
     }
 }
 global.XMLHttpRequest = MockXHR;
@@ -52,14 +53,18 @@ global.navigator = {
         getCurrentPosition: (success) => success({ coords: { latitude: 0, longitude: 0 } })
     }
 };
+global.setTimeout = setTimeout;
+global.clearTimeout = clearTimeout;
 
 async function runTest() {
     const test = new InternetSpeedTest();
+    test.testDuration = 500; // Speed up test for CI
+
     console.log("Starting Tests...");
 
     console.log("Testing Metadata...");
     await test.getMetadata();
-    if (test.results.ip === '127.0.0.1') {
+    if (test.results.ip === '127.0.0.1' && test.results.isp === 'Mock ISP') {
         console.log("✅ Metadata test passed");
     } else {
         console.error("❌ Metadata test failed", test.results);
